@@ -11,10 +11,30 @@ function Chronicle:RegisterSlashCommands()
 	end
 end
 
+local function split(str, delim)
+    delim = delim or "%s"  -- default: split on whitespace
+    local result = {}
+    if str == nil or str == "" then
+        return result
+    end
+    for part in string.gmatch(str, "([^" .. delim .. "]+)") do
+        table.insert(result, part)
+    end
+    return result
+end
+
 function Chronicle:HandleSlashCommand(msg)
 	-- Parse command and arguments
-	local cmd, args = self:ParseCommand(msg)
+	local parts = split(msg)
+	-- print(PrintTable(parts))
+	local cmd = parts[1] or ""
+	local arg = parts[2] or ""
 	
+
+	-- if true then
+	-- 	print("Slash command received: " .. cmd .. " " .. (args or ""))
+	-- 	return
+	-- end
 	if cmd == "debug" then
 		self:ToggleDebugFrame()
 		
@@ -28,7 +48,7 @@ function Chronicle:HandleSlashCommand(msg)
 		self:Print("Total units tracked: " .. stats.count)
 		
 	elseif cmd == "cleanup" then
-		local timeout = tonumber(args) or 3600
+		local timeout = tonumber(arg) or 3600
 		local removed = self:CleanupOldUnits(timeout)
 		self:Print("Cleaned up " .. removed .. " units not seen in " .. self:FormatTime(timeout))
 		
@@ -43,13 +63,6 @@ function Chronicle:HandleSlashCommand(msg)
 	else
 		self:Print("Unknown command. Type '/chronicle help' for available commands.")
 	end
-end
-
-function Chronicle:ParseCommand(msg)
-	msg = strtrim(msg or "")
-	local cmd, args = strsplit(" ", msg, 2)
-	cmd = strlower(cmd or "")
-	return cmd, args
 end
 
 function Chronicle:ShowHelp()

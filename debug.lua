@@ -6,7 +6,7 @@ function Chronicle:CreateDebugFrame()
 	local frame = CreateFrame("Frame", "ChronicleDebugFrame", UIParent)
 	frame:SetWidth(500)
 	frame:SetHeight(400)
-	frame:SetPoint("CENTER")
+	frame:SetPoint("CENTER", 0, 0)
 	frame:SetBackdrop({
 		bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
 		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",

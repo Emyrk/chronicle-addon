@@ -73,14 +73,22 @@ function Chronicle:UpdateUnit(guid)
 	unitData.canCooperate = UnitCanCooperate("player", guid)
 
 	-- Check for owner unit
-	local ok, ownerGuid = UnitExists(guid+"owner")
+	local ok, ownerGuid = UnitExists(guid.."owner")
 	if ok then
 		unitData.owner = ownerGuid
 	end
 	
 	self.db.units[guid] = unitData
 	if time() - lastLogged > 300 then
-		CombatLogAdd("UNIT_INFO:" .. unitData.guid)
+		local logLine = string.format("UNIT_INFO: %s&%s&%s&%s&%s",
+			date("%d.%m.%y %H:%M:%S"),
+			unitData.guid,
+			unitData.name,
+			unitData.canCooperate and "1" or "0",
+			unitData.owner or ""
+		)
+		CombatLogAdd(logLine, 1)
+		self:DebugPrint(logLine)
 		unitData.logged = time()
 	end
 	return unitData
@@ -114,6 +122,7 @@ function Chronicle:CreateEventFrame()
 	
 	-- Register events
 	self.eventFrame:RegisterEvent("ADDON_LOADED")
+	self.eventFrame:RegisterEvent("RAW_COMBATLOG")
 	-- self.eventFrame:RegisterEvent("PLAYER_LOGIN")
 	-- self.eventFrame:RegisterEvent("PLAYER_LOGOUT")
 	
@@ -121,6 +130,30 @@ function Chronicle:CreateEventFrame()
 	-- self.eventFrame:RegisterEvent("UNIT_NAME_UPDATE")
 	-- self.eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 	-- etc.
+end
+
+-- Finds all 0x0000000000000000-style hex strings
+local function FindHexGUIDs(str)
+    local results = {}
+    
+    -- pattern:
+    -- 0x followed by exactly 16 hex chars
+    for match in string.gmatch(str, "0x(%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x)") do
+        table.insert(results, "0x" .. match)
+    end
+
+    return results
+end
+
+function Chronicle:RAW_COMBATLOG()
+	local event_name = arg1
+	local log = arg2
+
+	-- local input = "Mob died: 0x000000000000ABCD killed by 0x0000000000001234"
+	local guids = FindHexGUIDs(arg2)
+	for i = 1, table.getn(guids) do
+		self:UpdateUnit(guids[i])
+	end
 end
 
 function Chronicle:OnEvent(event, ...)
@@ -134,6 +167,8 @@ function Chronicle:OnEvent(event, ...)
 		self:OnPlayerLogin()
 	elseif event == "PLAYER_LOGOUT" then
 		self:OnPlayerLogout()
+	elseif event == "RAW_COMBATLOG" then
+		self:RAW_COMBATLOG()
 	end
 end
 
@@ -175,10 +210,3 @@ end
 -- =============================================================================
 -- Usage example:
 -- Chronicle:UpdateUnit("0x0000000000001234", "PlayerName", "OwnerName", {level = 60, class = "Warrior"})
-
--- =============================================================================
--- Initialization
--- =============================================================================
-
-Chronicle:CreateEventFrame()
-Chronicle:RegisterSlashCommands()

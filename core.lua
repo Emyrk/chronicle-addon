@@ -113,7 +113,7 @@ function Chronicle:UpdateUnit(guid)
 		buffs or ""
 	)
 	CombatLogAdd(logLine, 1)
-	self:DebugPrint(logLine)
+	-- self:DebugPrint(logLine)
 end
 
 -- Clean up old units that haven't been seen in a while

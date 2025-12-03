@@ -254,10 +254,14 @@ function Chronicle:OnEvent(event, ...)
 	elseif event == "RAW_COMBATLOG" then
 		self:RAW_COMBATLOG()
 	elseif event == "PLAYER_LOGIN" then
-		local pgid, ok = UnitExists(guid.."owner")
-		local loginMessage = "PLAYER_LOGIN: " .. UnitName("player") .. "&" .. tostring(ok and pgid or "nil")
+		local existing = LoggingCombat()
+		LoggingCombat(1)
+		local zone = GetRealZoneText()
+		local pgid, ok = UnitExists("player")
+		local loginMessage = "PLAYER_LOGIN: " .. UnitName("player") .. "&" .. tostring(ok and pgid or "nil") .. "&" .. zone
 		CombatLogAdd(loginMessage, 1)
 		CombatLogAdd(loginMessage)
+		LoggingCombat(existing)
 	end
 end
 
